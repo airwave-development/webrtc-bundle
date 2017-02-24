@@ -1,6 +1,6 @@
 {
     "name": "webrtc-bundle",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "a webrtc bundle which simplifies getUserMedia and PeerConnection",
     "main": "./dist/webrtc-bundle.js",
     "dependencies": {
