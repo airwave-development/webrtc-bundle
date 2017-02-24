@@ -1,0 +1,8 @@
+.DS_Store
+node_modules
+
+browsers
+
+#Jetbrains ides
+.idea
+npm-debug.log

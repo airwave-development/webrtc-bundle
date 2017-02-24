@@ -1,0 +1,37 @@
+{
+    "name": "webrtc-bundle",
+    "version": "1.0.0",
+    "description": "a webrtc bundle which simplifies getUserMedia and PeerConnection",
+    "main": "webrtc-bundle.js",
+    "dependencies": {
+        "lodash.clonedeep": "4.x.x",
+        "require-dir": "0.x.x",
+        "sdp-jingle-json": "3.x.x",
+        "webrtc-adapter": "3.x.x",
+        "wildemitter": "1.x.x"
+    },
+    "devDependencies": {
+        "browserify": "14.x.x",
+        "gulp": "3.x.x",
+        "gulp-concat": "2.x.x",
+        "run-sequence": "1.x.x"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/airwave-development/webrtc-bundle.git"
+    },
+    "keywords": [
+        "webRTC",
+        "getUserMedia",
+        "PeerConnection"
+    ],
+    "author": "Olivier de Jong",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/airwave-development/webrtc-bundle/issues"
+    },
+    "homepage": "https://github.com/airwave-development/webrtc-bundle#readme"
+}
