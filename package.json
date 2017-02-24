@@ -2,7 +2,7 @@
     "name": "webrtc-bundle",
     "version": "1.0.0",
     "description": "a webrtc bundle which simplifies getUserMedia and PeerConnection",
-    "main": "webrtc-bundle.js",
+    "main": "./dist/webrtc-bundle.js",
     "dependencies": {
         "lodash.clonedeep": "4.x.x",
         "require-dir": "0.x.x",

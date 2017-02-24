@@ -1,0 +1,22 @@
+{
+  "name": "webrtc-bundle",
+  "description": "a webrtc bundle which simplifies getUserMedia and PeerConnection",
+  "main": "./dist/webrtc-bundle.js",
+  "authors": [
+    "Olivier de Jong"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "webRTC",
+    "getUserMedia",
+    "PeerConnection"
+  ],
+  "homepage": "https://github.com/airwave-development/webrtc-bundle",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
