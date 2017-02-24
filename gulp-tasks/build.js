@@ -9,16 +9,27 @@ var runSequence = require('run-sequence');
 
 gulp.task('build', function(callback) {
     runSequence([
+        'build:hark',
         'build:adapter',
         'build:getusermedia',
         'build:rtcpeerconnection'
     ], 'build:concat-webrtcbundles', callback);
 });
 
+gulp.task('build:hark', function() {
+    return browserify({
+            standalone: 'hark'
+        })
+        .require('hark')
+        .bundle()
+        .pipe(fs.createWriteStream('./src/hark.bundle.js'));
+});
+
 gulp.task('build:adapter', function() {
     return browserify()
         .require('webrtc-adapter')
         .bundle()
+        .pipe(fs.createWriteStream('./src/adapter.bundle.js'));
 });
 
 gulp.task('build:getusermedia', function() {
@@ -42,6 +53,7 @@ gulp.task('build:rtcpeerconnection', function() {
 
 gulp.task('build:concat-webrtcbundles', function() {
     return gulp.src([
+        './src/hark.bundle.js',
         './src/adapter.bundle.js',
         './src/getusermedia.bundle.js',
         './src/rtcpeerconnection.bundle.js'
