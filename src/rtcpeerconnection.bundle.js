@@ -3614,16 +3614,15 @@ WildEmitter.mixin = function (constructor) {
 WildEmitter.mixin(WildEmitter);
 
 },{}],12:[function(require,module,exports){
+/* copied from https://github.com/otalk/RTCPeerConnection/blob/master/rtcpeerconnection.js */
 /*global RTCPeerConnection:false */
 /*global RTCIceCandidate:false */
 /*global RTCSessionDescription:false */
 
 var util = require('util');
-var adapter = require('webrtc-adapter');
-var cloneDeep = require('lodash.clonedeep');
-var singleJingleJSON = require('sdp-jingle-json');
-
+var SJJ = require('sdp-jingle-json');
 var WildEmitter = require('wildemitter');
+var cloneDeep = require('lodash.clonedeep');
 
 function PeerConnection(config, constraints) {
     var self = this;
@@ -3633,14 +3632,10 @@ function PeerConnection(config, constraints) {
     config = config || {};
     config.iceServers = config.iceServers || [];
 
-    var detectedBrowser = adapter.browserDetails.browser;
-
     // make sure this only gets enabled in Google Chrome
     // EXPERIMENTAL FLAG, might get removed without notice
     this.enableChromeNativeSimulcast = false;
-
-    if (constraints && constraints.optional &&
-        detectedBrowser === 'chrome' &&
+    if (constraints && constraints.optional && window.chrome &&
         navigator.appVersion.match(/Chromium\//) === null) {
         constraints.optional.forEach(function(constraint) {
             if (constraint.enableChromeNativeSimulcast) {
@@ -3651,8 +3646,7 @@ function PeerConnection(config, constraints) {
 
     // EXPERIMENTAL FLAG, might get removed without notice
     this.enableMultiStreamHacks = false;
-    if (constraints && constraints.optional &&
-        detectedBrowser === 'chrome') {
+    if (constraints && constraints.optional && window.chrome) {
         constraints.optional.forEach(function(constraint) {
             if (constraint.enableMultiStreamHacks) {
                 self.enableMultiStreamHacks = true;
@@ -3687,7 +3681,7 @@ function PeerConnection(config, constraints) {
     // this attemps to strip out candidates with an already known foundation
     // and type -- i.e. those which are gathered via the same TURN server
     // but different transports (TURN udp, tcp and tls respectively)
-    if (constraints && constraints.optional && detectedBrowser === 'chrome') {
+    if (constraints && constraints.optional && window.chrome) {
         constraints.optional.forEach(function(constraint) {
             if (constraint.andyetFasterICE) {
                 self.eliminateDuplicateCandidates = constraint.andyetFasterICE;
@@ -3719,7 +3713,7 @@ function PeerConnection(config, constraints) {
     // EXPERIMENTAL FLAG, might get removed without notice
     // working around https://bugzilla.mozilla.org/show_bug.cgi?id=1087551
     // pass in a timeout for this
-    if (detectedBrowser === 'firefox') {
+    if (window.navigator.mozGetUserMedia) {
         if (constraints && constraints.optional) {
             this.wtFirefox = 0;
             constraints.optional.forEach(function(constraint) {
@@ -3736,8 +3730,22 @@ function PeerConnection(config, constraints) {
 
     this.pc = new RTCPeerConnection(config, constraints);
 
-    this.getLocalStreams = this.pc.getLocalStreams.bind(this.pc);
-    this.getRemoteStreams = this.pc.getRemoteStreams.bind(this.pc);
+    if (typeof this.pc.getLocalStreams === 'function') {
+        this.getLocalStreams = this.pc.getLocalStreams.bind(this.pc);
+    } else {
+        this.getLocalStreams = function() {
+            return [];
+        };
+    }
+
+    if (typeof this.pc.getRemoteStreams === 'function') {
+        this.getRemoteStreams = this.pc.getRemoteStreams.bind(this.pc);
+    } else {
+        this.getRemoteStreams = function() {
+            return [];
+        };
+    }
+
     this.addStream = this.pc.addStream.bind(this.pc);
 
     this.removeStream = function(stream) {
@@ -3843,7 +3851,7 @@ PeerConnection.prototype.addStream = function(stream) {
 // helper function to check if a remote candidate is a stun/relay
 // candidate or an ipv6 candidate
 PeerConnection.prototype._checkLocalCandidate = function(candidate) {
-    var cand = singleJingleJSON.toCandidateJSON(candidate);
+    var cand = SJJ.toCandidateJSON(candidate);
     if (cand.type == 'srflx') {
         this.hadLocalStunCandidate = true;
     } else if (cand.type == 'relay') {
@@ -3857,7 +3865,7 @@ PeerConnection.prototype._checkLocalCandidate = function(candidate) {
 // helper function to check if a remote candidate is a stun/relay
 // candidate or an ipv6 candidate
 PeerConnection.prototype._checkRemoteCandidate = function(candidate) {
-    var cand = singleJingleJSON.toCandidateJSON(candidate);
+    var cand = SJJ.toCandidateJSON(candidate);
     if (cand.type == 'srflx') {
         this.hadRemoteStunCandidate = true;
     } else if (cand.type == 'relay') {
@@ -3898,7 +3906,7 @@ PeerConnection.prototype.processIce = function(update, cb) {
             var processCandidates = function() {
                 candidates.forEach(
                     function(candidate) {
-                        var iceCandidate = singleJingleJSON.toCandidateSDP(candidate) + '\r\n';
+                        var iceCandidate = SJJ.toCandidateSDP(candidate);
                         self.pc.addIceCandidate(
                             new RTCIceCandidate({
                                 candidate: iceCandidate,
@@ -3926,7 +3934,7 @@ PeerConnection.prototype.processIce = function(update, cb) {
                         type: 'offer',
                         jingle: self.remoteDescription
                     };
-                    offer.sdp = singleJingleJSON.toSessionSDP(offer.jingle, {
+                    offer.sdp = SJJ.toSessionSDP(offer.jingle, {
                         sid: self.config.sdpSessionID,
                         role: self._role(),
                         direction: 'incoming'
@@ -4003,7 +4011,7 @@ PeerConnection.prototype.offer = function(constraints, cb) {
                 function() {
                     var jingle;
                     if (self.config.useJingle) {
-                        jingle = singleJingleJSON.toSessionJSON(offer.sdp, {
+                        jingle = SJJ.toSessionJSON(offer.sdp, {
                             role: self._role(),
                             direction: 'outgoing'
                         });
@@ -4096,7 +4104,7 @@ PeerConnection.prototype.handleOffer = function(offer, cb) {
                         type: 'AS',
                         bandwidth: self.restrictBandwidth.toString()
                     };
-                    offer.sdp = singleJingleJSON.toSessionSDP(offer.jingle, {
+                    offer.sdp = SJJ.toSessionSDP(offer.jingle, {
                         sid: self.config.sdpSessionID,
                         role: self._role(),
                         direction: 'outgoing'
@@ -4114,7 +4122,7 @@ PeerConnection.prototype.handleOffer = function(offer, cb) {
                 };
             }
         });
-        offer.sdp = singleJingleJSON.toSessionSDP(offer.jingle, {
+        offer.sdp = SJJ.toSessionSDP(offer.jingle, {
             sid: self.config.sdpSessionID,
             role: self._role(),
             direction: 'incoming'
@@ -4175,7 +4183,7 @@ PeerConnection.prototype.handleAnswer = function(answer, cb) {
     cb = cb || function() {};
     var self = this;
     if (answer.jingle) {
-        answer.sdp = singleJingleJSON.toSessionSDP(answer.jingle, {
+        answer.sdp = SJJ.toSessionSDP(answer.jingle, {
             sid: self.config.sdpSessionID,
             role: self._role(),
             direction: 'incoming'
@@ -4249,7 +4257,7 @@ PeerConnection.prototype._answer = function(constraints, cb) {
             var sim = [];
             if (self.enableChromeNativeSimulcast) {
                 // native simulcast part 1: add another SSRC
-                answer.jingle = singleJingleJSON.toSessionJSON(answer.sdp, {
+                answer.jingle = SJJ.toSessionJSON(answer.sdp, {
                     role: self._role(),
                     direction: 'outgoing'
                 });
@@ -4282,7 +4290,7 @@ PeerConnection.prototype._answer = function(constraints, cb) {
                         });
 
                         answer.jingle.contents[1].application.sourceGroups = groups;
-                        answer.sdp = singleJingleJSON.toSessionSDP(answer.jingle, {
+                        answer.sdp = SJJ.toSessionSDP(answer.jingle, {
                             sid: self.config.sdpSessionID,
                             role: self._role(),
                             direction: 'outgoing'
@@ -4304,7 +4312,7 @@ PeerConnection.prototype._answer = function(constraints, cb) {
             self.pc.setLocalDescription(answer,
                 function() {
                     if (self.config.useJingle) {
-                        var jingle = singleJingleJSON.toSessionJSON(answer.sdp, {
+                        var jingle = SJJ.toSessionJSON(answer.sdp, {
                             role: self._role(),
                             direction: 'outgoing'
                         });
@@ -4317,7 +4325,7 @@ PeerConnection.prototype._answer = function(constraints, cb) {
                         // signal multiple tracks to the receiver
                         // for anything in the SIM group
                         if (!expandedAnswer.jingle) {
-                            expandedAnswer.jingle = singleJingleJSON.toSessionJSON(answer.sdp, {
+                            expandedAnswer.jingle = SJJ.toSessionJSON(answer.sdp, {
                                 role: self._role(),
                                 direction: 'outgoing'
                             });
@@ -4332,7 +4340,7 @@ PeerConnection.prototype._answer = function(constraints, cb) {
                                 return parameter;
                             });
                         });
-                        expandedAnswer.sdp = singleJingleJSON.toSessionSDP(expandedAnswer.jingle, {
+                        expandedAnswer.sdp = SJJ.toSessionSDP(expandedAnswer.jingle, {
                             sid: self.sdpSessionID,
                             role: self._role(),
                             direction: 'outgoing'
@@ -4379,7 +4387,7 @@ PeerConnection.prototype._onIce = function(event) {
         };
         this._checkLocalCandidate(ice.candidate);
 
-        var cand = singleJingleJSON.toCandidateJSON(ice.candidate);
+        var cand = SJJ.toCandidateJSON(ice.candidate);
 
         var already;
         var idx;
@@ -4429,7 +4437,7 @@ PeerConnection.prototype._onIce = function(event) {
                 }
             }
             if (!self.iceCredentials.local[ice.sdpMid]) {
-                var jingle = singleJingleJSON.toSessionJSON(self.pc.localDescription.sdp, {
+                var jingle = SJJ.toSessionJSON(self.pc.localDescription.sdp, {
                     role: self._role(),
                     direction: 'outgoing'
                 });
@@ -4510,18 +4518,20 @@ PeerConnection.prototype.createDataChannel = function(name, opts) {
     return channel;
 };
 
-PeerConnection.prototype.getStats = function(cb) {
-    this.pc.getStats(null,
-        function(res) {
+PeerConnection.prototype.getStats = function() {
+    if (typeof arguments[0] === 'function') {
+        var cb = arguments[0];
+        this.pc.getStats().then(function(res) {
             cb(null, res);
-        },
-        function(err) {
+        }, function(err) {
             cb(err);
-        }
-    );
+        });
+    } else {
+        return this.pc.getStats.apply(this.pc, arguments);
+    }
 };
 
 module.exports = PeerConnection;
 
-},{"lodash.clonedeep":1,"sdp-jingle-json":3,"util":10,"webrtc-adapter":"webrtc-adapter","wildemitter":11}]},{},[12])(12)
+},{"lodash.clonedeep":1,"sdp-jingle-json":3,"util":10,"wildemitter":11}]},{},[12])(12)
 });

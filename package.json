@@ -4,18 +4,18 @@
     "description": "a webrtc bundle which simplifies getUserMedia and PeerConnection",
     "main": "./dist/webrtc-bundle.js",
     "dependencies": {
-        "hark": "1.x.x",
+        "hark": "1.1.6",
         "lodash.clonedeep": "4.x.x",
-        "require-dir": "0.x.x",
+        "require-dir": "0.3.2",
         "sdp-jingle-json": "3.x.x",
-        "webrtc-adapter": "3.x.x",
+        "webrtc-adapter": "5.0.4",
         "wildemitter": "1.x.x"
     },
     "devDependencies": {
-        "browserify": "14.x.x",
+        "browserify": "14.4.0",
         "gulp": "3.x.x",
         "gulp-concat": "2.x.x",
-        "run-sequence": "1.x.x"
+        "run-sequence": "2.2.0"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"

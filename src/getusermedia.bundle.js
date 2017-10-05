@@ -1,13 +1,12 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.getUserMedia = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/* copied from https://github.com/otalk/getUserMedia/blob/master/getusermedia.js */
+/* getUserMedia helper by @HenrikJoreteg used for navigator.getUserMedia shim */
 var adapter = require('webrtc-adapter');
 
-function getUserMedia(constraints, cb) {
+module.exports = function (constraints, cb) {
     var error;
     var haveOpts = arguments.length === 2;
-    var defaultOpts = {
-        video: true,
-        audio: true
-    };
+    var defaultOpts = {video: true, audio: true};
 
     var denied = 'PermissionDeniedError';
     var altDenied = 'PERMISSION_DENIED';
@@ -26,7 +25,7 @@ function getUserMedia(constraints, cb) {
         error.name = 'NotSupportedError';
 
         // keep all callbacks async
-        return setTimeout(function() {
+        return setTimeout(function () {
             cb(error);
         }, 0);
     }
@@ -37,14 +36,15 @@ function getUserMedia(constraints, cb) {
         error.name = 'NoMediaRequestedError';
 
         // keep all callbacks async
-        return setTimeout(function() {
+        return setTimeout(function () {
             cb(error);
         }, 0);
     }
 
-    navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+    navigator.mediaDevices.getUserMedia(constraints)
+    .then(function (stream) {
         cb(null, stream);
-    }).catch(function(err) {
+    }).catch(function (err) {
         var error;
         // coerce into an error object since FF gives us a string
         // there are only two valid names according to the spec
@@ -74,9 +74,7 @@ function getUserMedia(constraints, cb) {
 
         cb(error);
     });
-}
-
-module.exports = getUserMedia;
+};
 
 },{"webrtc-adapter":"webrtc-adapter"}]},{},[1])(1)
 });

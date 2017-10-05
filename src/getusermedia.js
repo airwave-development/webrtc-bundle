@@ -1,12 +1,11 @@
+/* copied from https://github.com/otalk/getUserMedia/blob/master/getusermedia.js */
+/* getUserMedia helper by @HenrikJoreteg used for navigator.getUserMedia shim */
 var adapter = require('webrtc-adapter');
 
-function getUserMedia(constraints, cb) {
+module.exports = function (constraints, cb) {
     var error;
     var haveOpts = arguments.length === 2;
-    var defaultOpts = {
-        video: true,
-        audio: true
-    };
+    var defaultOpts = {video: true, audio: true};
 
     var denied = 'PermissionDeniedError';
     var altDenied = 'PERMISSION_DENIED';
@@ -25,7 +24,7 @@ function getUserMedia(constraints, cb) {
         error.name = 'NotSupportedError';
 
         // keep all callbacks async
-        return setTimeout(function() {
+        return setTimeout(function () {
             cb(error);
         }, 0);
     }
@@ -36,14 +35,15 @@ function getUserMedia(constraints, cb) {
         error.name = 'NoMediaRequestedError';
 
         // keep all callbacks async
-        return setTimeout(function() {
+        return setTimeout(function () {
             cb(error);
         }, 0);
     }
 
-    navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+    navigator.mediaDevices.getUserMedia(constraints)
+    .then(function (stream) {
         cb(null, stream);
-    }).catch(function(err) {
+    }).catch(function (err) {
         var error;
         // coerce into an error object since FF gives us a string
         // there are only two valid names according to the spec
@@ -73,6 +73,4 @@ function getUserMedia(constraints, cb) {
 
         cb(error);
     });
-}
-
-module.exports = getUserMedia;
+};
